@@ -1,27 +1,27 @@
 # Use shadowsocks as command prefix to avoid name conflict
 # Maybe ss-local/server is better because easier to type
 PREFIX := shadowsocks
-LOCAL := $(GOPATH)/bin/$(PREFIX)-local
-SERVER := $(GOPATH)/bin/$(PREFIX)-server
+LOCAL := ./bin/$(PREFIX)-local
+SERVER := ./bin/$(PREFIX)-server
 CGO := CGO_ENABLED=1
+GO_LDFLAGS=-ldflags "-w"
 
-all: $(LOCAL) $(SERVER) $(TEST)
+TAG=dev
+IMAGE=dhub.yunpro.cn/shenshouer/distribute
 
-.PHONY: clean
-
+build: ## build the go packages
+	@echo "$@"
+	
 clean:
+	@echo "$@"
 	rm -f $(LOCAL) $(SERVER) $(TEST)
 
-# -a option is needed to ensure we disabled CGO
 $(LOCAL): shadowsocks/*.go cmd/$(PREFIX)-local/*.go
-	cd cmd/$(PREFIX)-local; $(CGO) go install
+	mkdir -p ./bin; $(CGO) GOOS=linux go build -a -installsuffix cgo ${GO_LDFLAGS} -o ./bin/$(PREFIX)-local ./cmd/$(PREFIX)-local/local.go
 
 $(SERVER): shadowsocks/*.go cmd/$(PREFIX)-server/*.go
-	cd cmd/$(PREFIX)-server; $(CGO) go install
-
-local: $(LOCAL)
+	mkdir -p ./bin; $(CGO) GOOS=linux go build -a -installsuffix cgo ${GO_LDFLAGS} -o ./bin/$(PREFIX)-server ./cmd/$(PREFIX)-server/server.go
 
 server: $(SERVER)
 
-test:
-	cd shadowsocks; go test
+local: $(LOCAL)
